@@ -1,19 +1,19 @@
 /**
  * @license
- * Selectivity.js 3.0.0 <https://arendjr.github.io/selectivity/>
+ * Selectivity.js 3.0.3 <https://arendjr.github.io/selectivity/>
  * Copyright (c) 2014-2016 Arend van Beelen jr.
  *           (c) 2016 Speakap BV
  * Available under MIT license <https://github.com/arendjr/selectivity/blob/master/LICENSE>
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.selectivity = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var root = _dereq_(7);
+var root = _dereq_(10);
 
 /** Built-in value references. */
 var Symbol = root.Symbol;
 
 module.exports = Symbol;
 
-},{"7":7}],2:[function(_dereq_,module,exports){
+},{"10":10}],2:[function(_dereq_,module,exports){
 /**
  * A specialized version of `_.map` for arrays without support for iteratee
  * shorthands.
@@ -25,7 +25,7 @@ module.exports = Symbol;
  */
 function arrayMap(array, iteratee) {
   var index = -1,
-      length = array ? array.length : 0,
+      length = array == null ? 0 : array.length,
       result = Array(length);
 
   while (++index < length) {
@@ -37,6 +37,37 @@ function arrayMap(array, iteratee) {
 module.exports = arrayMap;
 
 },{}],3:[function(_dereq_,module,exports){
+var Symbol = _dereq_(1),
+    getRawTag = _dereq_(8),
+    objectToString = _dereq_(9);
+
+/** `Object#toString` result references. */
+var nullTag = '[object Null]',
+    undefinedTag = '[object Undefined]';
+
+/** Built-in value references. */
+var symToStringTag = Symbol ? Symbol.toStringTag : undefined;
+
+/**
+ * The base implementation of `getTag` without fallbacks for buggy environments.
+ *
+ * @private
+ * @param {*} value The value to query.
+ * @returns {string} Returns the `toStringTag`.
+ */
+function baseGetTag(value) {
+  if (value == null) {
+    return value === undefined ? undefinedTag : nullTag;
+  }
+  value = Object(value);
+  return (symToStringTag && symToStringTag in value)
+    ? getRawTag(value)
+    : objectToString(value);
+}
+
+module.exports = baseGetTag;
+
+},{"1":1,"8":8,"9":9}],4:[function(_dereq_,module,exports){
 /**
  * The base implementation of `_.propertyOf` without support for deep paths.
  *
@@ -52,11 +83,11 @@ function basePropertyOf(object) {
 
 module.exports = basePropertyOf;
 
-},{}],4:[function(_dereq_,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 var Symbol = _dereq_(1),
     arrayMap = _dereq_(2),
-    isArray = _dereq_(10),
-    isSymbol = _dereq_(14);
+    isArray = _dereq_(13),
+    isSymbol = _dereq_(17);
 
 /** Used as references for various `Number` constants. */
 var INFINITY = 1 / 0;
@@ -91,8 +122,8 @@ function baseToString(value) {
 
 module.exports = baseToString;
 
-},{"1":1,"10":10,"14":14,"2":2}],5:[function(_dereq_,module,exports){
-var basePropertyOf = _dereq_(3);
+},{"1":1,"13":13,"17":17,"2":2}],6:[function(_dereq_,module,exports){
+var basePropertyOf = _dereq_(4);
 
 /** Used to map characters to HTML entities. */
 var htmlEscapes = {
@@ -114,7 +145,7 @@ var escapeHtmlChar = basePropertyOf(htmlEscapes);
 
 module.exports = escapeHtmlChar;
 
-},{"3":3}],6:[function(_dereq_,module,exports){
+},{"4":4}],7:[function(_dereq_,module,exports){
 (function (global){
 /** Detect free variable `global` from Node.js. */
 var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
@@ -122,8 +153,80 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 module.exports = freeGlobal;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],7:[function(_dereq_,module,exports){
-var freeGlobal = _dereq_(6);
+},{}],8:[function(_dereq_,module,exports){
+var Symbol = _dereq_(1);
+
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var nativeObjectToString = objectProto.toString;
+
+/** Built-in value references. */
+var symToStringTag = Symbol ? Symbol.toStringTag : undefined;
+
+/**
+ * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
+ *
+ * @private
+ * @param {*} value The value to query.
+ * @returns {string} Returns the raw `toStringTag`.
+ */
+function getRawTag(value) {
+  var isOwn = hasOwnProperty.call(value, symToStringTag),
+      tag = value[symToStringTag];
+
+  try {
+    value[symToStringTag] = undefined;
+    var unmasked = true;
+  } catch (e) {}
+
+  var result = nativeObjectToString.call(value);
+  if (unmasked) {
+    if (isOwn) {
+      value[symToStringTag] = tag;
+    } else {
+      delete value[symToStringTag];
+    }
+  }
+  return result;
+}
+
+module.exports = getRawTag;
+
+},{"1":1}],9:[function(_dereq_,module,exports){
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var nativeObjectToString = objectProto.toString;
+
+/**
+ * Converts `value` to a string using `Object.prototype.toString`.
+ *
+ * @private
+ * @param {*} value The value to convert.
+ * @returns {string} Returns the converted string.
+ */
+function objectToString(value) {
+  return nativeObjectToString.call(value);
+}
+
+module.exports = objectToString;
+
+},{}],10:[function(_dereq_,module,exports){
+var freeGlobal = _dereq_(7);
 
 /** Detect free variable `self`. */
 var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
@@ -133,10 +236,10 @@ var root = freeGlobal || freeSelf || Function('return this')();
 
 module.exports = root;
 
-},{"6":6}],8:[function(_dereq_,module,exports){
-var isObject = _dereq_(11),
-    now = _dereq_(15),
-    toNumber = _dereq_(16);
+},{"7":7}],11:[function(_dereq_,module,exports){
+var isObject = _dereq_(14),
+    now = _dereq_(18),
+    toNumber = _dereq_(19);
 
 /** Error message constants. */
 var FUNC_ERROR_TEXT = 'Expected a function';
@@ -323,9 +426,9 @@ function debounce(func, wait, options) {
 
 module.exports = debounce;
 
-},{"11":11,"15":15,"16":16}],9:[function(_dereq_,module,exports){
-var escapeHtmlChar = _dereq_(5),
-    toString = _dereq_(17);
+},{"14":14,"18":18,"19":19}],12:[function(_dereq_,module,exports){
+var escapeHtmlChar = _dereq_(6),
+    toString = _dereq_(20);
 
 /** Used to match HTML entities and HTML characters. */
 var reUnescapedHtml = /[&<>"']/g,
@@ -368,7 +471,7 @@ function escape(string) {
 
 module.exports = escape;
 
-},{"17":17,"5":5}],10:[function(_dereq_,module,exports){
+},{"20":20,"6":6}],13:[function(_dereq_,module,exports){
 /**
  * Checks if `value` is classified as an `Array` object.
  *
@@ -396,7 +499,7 @@ var isArray = Array.isArray;
 
 module.exports = isArray;
 
-},{}],11:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 /**
  * Checks if `value` is the
  * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
@@ -429,7 +532,7 @@ function isObject(value) {
 
 module.exports = isObject;
 
-},{}],12:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 /**
  * Checks if `value` is object-like. A value is object-like if it's not `null`
  * and has a `typeof` result of "object".
@@ -460,22 +563,13 @@ function isObjectLike(value) {
 
 module.exports = isObjectLike;
 
-},{}],13:[function(_dereq_,module,exports){
-var isArray = _dereq_(10),
-    isObjectLike = _dereq_(12);
+},{}],16:[function(_dereq_,module,exports){
+var baseGetTag = _dereq_(3),
+    isArray = _dereq_(13),
+    isObjectLike = _dereq_(15);
 
 /** `Object#toString` result references. */
 var stringTag = '[object String]';
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objectToString = objectProto.toString;
 
 /**
  * Checks if `value` is classified as a `String` primitive or object.
@@ -496,26 +590,17 @@ var objectToString = objectProto.toString;
  */
 function isString(value) {
   return typeof value == 'string' ||
-    (!isArray(value) && isObjectLike(value) && objectToString.call(value) == stringTag);
+    (!isArray(value) && isObjectLike(value) && baseGetTag(value) == stringTag);
 }
 
 module.exports = isString;
 
-},{"10":10,"12":12}],14:[function(_dereq_,module,exports){
-var isObjectLike = _dereq_(12);
+},{"13":13,"15":15,"3":3}],17:[function(_dereq_,module,exports){
+var baseGetTag = _dereq_(3),
+    isObjectLike = _dereq_(15);
 
 /** `Object#toString` result references. */
 var symbolTag = '[object Symbol]';
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objectToString = objectProto.toString;
 
 /**
  * Checks if `value` is classified as a `Symbol` primitive or object.
@@ -536,13 +621,13 @@ var objectToString = objectProto.toString;
  */
 function isSymbol(value) {
   return typeof value == 'symbol' ||
-    (isObjectLike(value) && objectToString.call(value) == symbolTag);
+    (isObjectLike(value) && baseGetTag(value) == symbolTag);
 }
 
 module.exports = isSymbol;
 
-},{"12":12}],15:[function(_dereq_,module,exports){
-var root = _dereq_(7);
+},{"15":15,"3":3}],18:[function(_dereq_,module,exports){
+var root = _dereq_(10);
 
 /**
  * Gets the timestamp of the number of milliseconds that have elapsed since
@@ -566,9 +651,9 @@ var now = function() {
 
 module.exports = now;
 
-},{"7":7}],16:[function(_dereq_,module,exports){
-var isObject = _dereq_(11),
-    isSymbol = _dereq_(14);
+},{"10":10}],19:[function(_dereq_,module,exports){
+var isObject = _dereq_(14),
+    isSymbol = _dereq_(17);
 
 /** Used as references for various `Number` constants. */
 var NAN = 0 / 0;
@@ -634,8 +719,8 @@ function toNumber(value) {
 
 module.exports = toNumber;
 
-},{"11":11,"14":14}],17:[function(_dereq_,module,exports){
-var baseToString = _dereq_(4);
+},{"14":14,"17":17}],20:[function(_dereq_,module,exports){
+var baseToString = _dereq_(5);
 
 /**
  * Converts `value` to a string. An empty string is returned for `null`
@@ -664,13 +749,13 @@ function toString(value) {
 
 module.exports = toString;
 
-},{"4":4}],18:[function(_dereq_,module,exports){
+},{"5":5}],21:[function(_dereq_,module,exports){
 'use strict';
 
 var $ = (window.jQuery || window.Zepto);
-var isString = _dereq_(13);
+var isString = _dereq_(16);
 
-var Selectivity = _dereq_(35);
+var Selectivity = _dereq_(38);
 
 var EVENT_PROPERTIES = {
     'change': ['added', 'removed', 'value'],
@@ -782,20 +867,22 @@ $.fn.selectivity = function selectivity(methodName, options) {
 
 Selectivity.patchEvents = patchEvents;
 
-},{"13":13,"35":35,"jquery":"jquery"}],19:[function(_dereq_,module,exports){
+$.Selectivity = Selectivity;
+
+},{"16":16,"38":38,"jquery":"jquery"}],22:[function(_dereq_,module,exports){
 'use strict';
 
 var extend = (window.jQuery || window.Zepto).extend;
 
-var EventListener = _dereq_(20);
-var getItemSelector = _dereq_(38);
-var matchesSelector = _dereq_(40);
-var parseElement = _dereq_(41);
-var removeElement = _dereq_(42);
-var stopPropagation = _dereq_(43);
-var toggleClass = _dereq_(44);
+var EventListener = _dereq_(23);
+var getItemSelector = _dereq_(41);
+var matchesSelector = _dereq_(43);
+var parseElement = _dereq_(44);
+var removeElement = _dereq_(45);
+var stopPropagation = _dereq_(46);
+var toggleClass = _dereq_(47);
 
-var Selectivity = _dereq_(35);
+var Selectivity = _dereq_(38);
 
 var HIGHLIGHT_CLASS = 'highlight';
 var HIGHLIGHT_SELECTOR = '.' + HIGHLIGHT_CLASS;
@@ -1382,13 +1469,13 @@ extend(SelectivityDropdown.prototype, {
 
 module.exports = Selectivity.Dropdown = SelectivityDropdown;
 
-},{"20":20,"35":35,"38":38,"40":40,"41":41,"42":42,"43":43,"44":44,"lodash/extend":"lodash/extend"}],20:[function(_dereq_,module,exports){
+},{"23":23,"38":38,"41":41,"43":43,"44":44,"45":45,"46":46,"47":47,"lodash/extend":"lodash/extend"}],23:[function(_dereq_,module,exports){
 'use strict';
 
 var extend = (window.jQuery || window.Zepto).extend;
-var isString = _dereq_(13);
+var isString = _dereq_(16);
 
-var matchesSelector = _dereq_(40);
+var matchesSelector = _dereq_(43);
 
 var CAPTURED_EVENTS = ['blur', 'focus', 'mouseenter', 'mouseleave', 'scroll'];
 
@@ -1442,11 +1529,16 @@ extend(EventListener.prototype, {
         }
 
         if (callback) {
-            var events = this.events[eventName][selector];
-            for (var i = 0; i < events.length; i++) {
-                if (events[i] === callback) {
-                    events.splice(i, 1);
-                    i--;
+            var events = this.events[eventName];
+            if (events) {
+                events = events[selector];
+                if (events) {
+                    for (var i = 0; i < events.length; i++) {
+                        if (events[i] === callback) {
+                            events.splice(i, 1);
+                            i--;
+                        }
+                    }
                 }
             }
         } else {
@@ -1546,13 +1638,13 @@ extend(EventListener.prototype, {
 
 module.exports = EventListener;
 
-},{"13":13,"40":40,"lodash/extend":"lodash/extend"}],21:[function(_dereq_,module,exports){
+},{"16":16,"43":43,"lodash/extend":"lodash/extend"}],24:[function(_dereq_,module,exports){
 'use strict';
 
 var extend = (window.jQuery || window.Zepto).extend;
 
-var MultipleInput = _dereq_(22);
-var Selectivity = _dereq_(35);
+var MultipleInput = _dereq_(25);
+var Selectivity = _dereq_(38);
 
 function isValidEmail(email) {
 
@@ -1697,19 +1789,19 @@ Selectivity.inherits(EmailInput, MultipleInput);
 
 module.exports = Selectivity.Inputs.Email = EmailInput;
 
-},{"22":22,"35":35,"lodash/extend":"lodash/extend"}],22:[function(_dereq_,module,exports){
+},{"25":25,"38":38,"lodash/extend":"lodash/extend"}],25:[function(_dereq_,module,exports){
 'use strict';
 
 var extend = (window.jQuery || window.Zepto).extend;
-var isString = _dereq_(13);
+var isString = _dereq_(16);
 
-var Selectivity = _dereq_(35);
-var getItemSelector = _dereq_(38);
-var getKeyCode = _dereq_(39);
-var parseElement = _dereq_(41);
-var removeElement = _dereq_(42);
-var stopPropagation = _dereq_(43);
-var toggleClass = _dereq_(44);
+var Selectivity = _dereq_(38);
+var getItemSelector = _dereq_(41);
+var getKeyCode = _dereq_(42);
+var parseElement = _dereq_(44);
+var removeElement = _dereq_(45);
+var stopPropagation = _dereq_(46);
+var toggleClass = _dereq_(47);
 
 var KEY_BACKSPACE = 8;
 var KEY_DELETE = 46;
@@ -2225,13 +2317,13 @@ var callSuper = Selectivity.inherits(MultipleInput, Selectivity, {
 
 module.exports = Selectivity.Inputs.Multiple = MultipleInput;
 
-},{"13":13,"35":35,"38":38,"39":39,"41":41,"42":42,"43":43,"44":44,"lodash/extend":"lodash/extend"}],23:[function(_dereq_,module,exports){
+},{"16":16,"38":38,"41":41,"42":42,"44":44,"45":45,"46":46,"47":47,"lodash/extend":"lodash/extend"}],26:[function(_dereq_,module,exports){
 'use strict';
 
 var extend = (window.jQuery || window.Zepto).extend;
 
-var Selectivity = _dereq_(35);
-var stopPropagation = _dereq_(43);
+var Selectivity = _dereq_(38);
+var stopPropagation = _dereq_(46);
 
 /**
  * SingleInput Constructor.
@@ -2430,12 +2522,12 @@ var callSuper = Selectivity.inherits(SingleInput, Selectivity, {
 
 module.exports = Selectivity.Inputs.Single = SingleInput;
 
-},{"35":35,"43":43,"lodash/extend":"lodash/extend"}],24:[function(_dereq_,module,exports){
+},{"38":38,"46":46,"lodash/extend":"lodash/extend"}],27:[function(_dereq_,module,exports){
 'use strict';
 
-var escape = _dereq_(9);
+var escape = _dereq_(12);
 
-var Selectivity = _dereq_(35);
+var Selectivity = _dereq_(38);
 
 /**
  * Localizable elements of the Selectivity Templates.
@@ -2467,13 +2559,13 @@ module.exports = Selectivity.Locale = {
 
 };
 
-},{"35":35,"9":9}],25:[function(_dereq_,module,exports){
+},{"12":12,"38":38}],28:[function(_dereq_,module,exports){
 'use strict';
 
-var debounce = _dereq_(8);
+var debounce = _dereq_(11);
 
-var Selectivity = _dereq_(35);
-var Locale = _dereq_(24);
+var Selectivity = _dereq_(38);
+var Locale = _dereq_(27);
 
 function addUrlParam(url, key, value) {
     return url + (url.indexOf('?') > -1 ? '&' : '?') + key + '=' + encodeURIComponent(value);
@@ -2504,8 +2596,10 @@ function doFetch(ajax, queryOptions) {
         }
     }
 
-    var init = pick(ajax, ['body', 'cache', 'credentials', 'headers', 'integrity', 'method', 'mode',
-                           'redirect', 'referrer', 'referrerPolicy']);
+    var init = pick(ajax, [
+        'body', 'cache', 'credentials', 'headers', 'integrity', 'method', 'mode', 'redirect',
+        'referrer', 'referrerPolicy'
+    ]);
 
     fetch(url, init, queryOptions)
         .then(function(response) {
@@ -2551,10 +2645,10 @@ Selectivity.OptionListeners.unshift(function(selectivity, options) {
     }
 });
 
-},{"24":24,"35":35,"8":8}],26:[function(_dereq_,module,exports){
+},{"11":11,"27":27,"38":38}],29:[function(_dereq_,module,exports){
 'use strict';
 
-var Selectivity = _dereq_(35);
+var Selectivity = _dereq_(38);
 
 var latestQueryNum = 0;
 
@@ -2588,7 +2682,7 @@ Selectivity.OptionListeners.push(function(selectivity, options) {
     }
 });
 
-},{"35":35}],27:[function(_dereq_,module,exports){
+},{"38":38}],30:[function(_dereq_,module,exports){
 'use strict';
 
 var DIACRITICS = {
@@ -3433,7 +3527,7 @@ var DIACRITICS = {
     '\u03C2': '\u03C3'
 };
 
-var Selectivity = _dereq_(35);
+var Selectivity = _dereq_(38);
 var previousTransform = Selectivity.transformText;
 
 /**
@@ -3452,12 +3546,12 @@ Selectivity.transformText = function(string) {
     return previousTransform(result);
 };
 
-},{"35":35}],28:[function(_dereq_,module,exports){
+},{"38":38}],31:[function(_dereq_,module,exports){
 'use strict';
 
 var $ = (window.jQuery || window.Zepto);
 
-var Selectivity = _dereq_(35);
+var Selectivity = _dereq_(38);
 
 /**
  * Option listener that implements a convenience query function for performing AJAX requests.
@@ -3484,12 +3578,12 @@ Selectivity.OptionListeners.unshift(function(selectivity, options) {
     }
 });
 
-},{"35":35,"jquery":"jquery"}],29:[function(_dereq_,module,exports){
+},{"38":38,"jquery":"jquery"}],32:[function(_dereq_,module,exports){
 'use strict';
 
 var $ = (window.jQuery || window.Zepto);
 
-var Selectivity = _dereq_(35);
+var Selectivity = _dereq_(38);
 
 function createSelectivityNextToSelectElement($el, options) {
 
@@ -3583,12 +3677,12 @@ Selectivity.OptionListeners.push(function(selectivity, options) {
     }
 });
 
-},{"35":35,"jquery":"jquery"}],30:[function(_dereq_,module,exports){
+},{"38":38,"jquery":"jquery"}],33:[function(_dereq_,module,exports){
 'use strict';
 
-var Selectivity = _dereq_(35);
-var findResultItem = _dereq_(37);
-var getKeyCode = _dereq_(39);
+var Selectivity = _dereq_(38);
+var findResultItem = _dereq_(40);
+var getKeyCode = _dereq_(42);
 
 var KEY_BACKSPACE = 8;
 var KEY_DOWN_ARROW = 40;
@@ -3747,10 +3841,10 @@ function listener(selectivity, input) {
 
 Selectivity.InputListeners.push(listener);
 
-},{"35":35,"37":37,"39":39}],31:[function(_dereq_,module,exports){
+},{"38":38,"40":40,"42":42}],34:[function(_dereq_,module,exports){
 'use strict';
 
-var Selectivity = _dereq_(35);
+var Selectivity = _dereq_(38);
 
 var allowedOptions = {
     allowClear: 'boolean',
@@ -3803,13 +3897,13 @@ Selectivity.OptionListeners.unshift(function(selectivity, options) {
 
 });
 
-},{"35":35}],32:[function(_dereq_,module,exports){
+},{"38":38}],35:[function(_dereq_,module,exports){
 'use strict';
 
-var Dropdown = _dereq_(19);
-var Selectivity = _dereq_(35);
+var Dropdown = _dereq_(22);
+var Selectivity = _dereq_(38);
 
-var findResultItem = _dereq_(37);
+var findResultItem = _dereq_(40);
 
 /**
  * Extended dropdown that supports submenus.
@@ -4040,12 +4134,12 @@ Selectivity.Dropdown = SubmenuPlugin;
 
 module.exports = SubmenuPlugin;
 
-},{"19":19,"35":35,"37":37}],33:[function(_dereq_,module,exports){
+},{"22":22,"38":38,"40":40}],36:[function(_dereq_,module,exports){
 'use strict';
 
 var extend = (window.jQuery || window.Zepto).extend;
 
-var Selectivity = _dereq_(35);
+var Selectivity = _dereq_(38);
 
 function defaultTokenizer(input, selection, createToken, options) {
 
@@ -4107,16 +4201,16 @@ Selectivity.OptionListeners.push(function(selectivity, options) {
     }
 });
 
-},{"35":35,"lodash/extend":"lodash/extend"}],34:[function(_dereq_,module,exports){
-_dereq_(19);_dereq_(21);_dereq_(22);_dereq_(23);_dereq_(24);_dereq_(25);_dereq_(26);_dereq_(27);_dereq_(28);_dereq_(29);_dereq_(30);_dereq_(31);_dereq_(32);_dereq_(33);_dereq_(36);_dereq_(18);
-},{"18":18,"19":19,"21":21,"22":22,"23":23,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29,"30":30,"31":31,"32":32,"33":33,"36":36}],35:[function(_dereq_,module,exports){
+},{"38":38,"lodash/extend":"lodash/extend"}],37:[function(_dereq_,module,exports){
+_dereq_(22);_dereq_(24);_dereq_(25);_dereq_(26);_dereq_(27);_dereq_(28);_dereq_(29);_dereq_(30);_dereq_(31);_dereq_(32);_dereq_(33);_dereq_(34);_dereq_(35);_dereq_(36);_dereq_(39);_dereq_(21);
+},{"21":21,"22":22,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29,"30":30,"31":31,"32":32,"33":33,"34":34,"35":35,"36":36,"39":39}],38:[function(_dereq_,module,exports){
 'use strict';
 
 var extend = (window.jQuery || window.Zepto).extend;
-var isString = _dereq_(13);
+var isString = _dereq_(16);
 
-var EventListener = _dereq_(20);
-var toggleClass = _dereq_(44);
+var EventListener = _dereq_(23);
+var toggleClass = _dereq_(47);
 
 /**
  * Selectivity Base Constructor.
@@ -4299,6 +4393,8 @@ extend(Selectivity.prototype, {
         var items = this.items;
         if (items) {
             return Selectivity.findNestedById(items, id);
+        } else if (id === null) {
+            return null;
         } else {
             return { id: id, text: '' + id };
         }
@@ -4969,13 +5065,13 @@ Selectivity.transformText = function(string) {
 
 module.exports = Selectivity;
 
-},{"13":13,"20":20,"44":44,"lodash/extend":"lodash/extend"}],36:[function(_dereq_,module,exports){
+},{"16":16,"23":23,"47":47,"lodash/extend":"lodash/extend"}],39:[function(_dereq_,module,exports){
 'use strict';
 
-var escape = _dereq_(9);
+var escape = _dereq_(12);
 
-var Selectivity = _dereq_(35);
-var Locale = _dereq_(24);
+var Selectivity = _dereq_(38);
+var Locale = _dereq_(27);
 
 /**
  * Default set of templates to use with Selectivity.js.
@@ -5271,7 +5367,7 @@ Selectivity.Templates = {
 
 };
 
-},{"24":24,"35":35,"9":9}],37:[function(_dereq_,module,exports){
+},{"12":12,"27":27,"38":38}],40:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -5294,7 +5390,7 @@ module.exports = function(resultItems, itemId) {
     return null;
 };
 
-},{}],38:[function(_dereq_,module,exports){
+},{}],41:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -5309,7 +5405,7 @@ module.exports = function(selector, id) {
     return selector + '[data-item-id=' + quotedId + ']';
 };
 
-},{}],39:[function(_dereq_,module,exports){
+},{}],42:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -5320,7 +5416,7 @@ module.exports = function(event) {
     return event.which || event.keyCode || 0;
 };
 
-},{}],40:[function(_dereq_,module,exports){
+},{}],43:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -5333,7 +5429,7 @@ module.exports = function(el, selector) {
     return method.call(el, selector);
 };
 
-},{}],41:[function(_dereq_,module,exports){
+},{}],44:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -5348,7 +5444,7 @@ module.exports = function(html) {
     return div.firstChild;
 };
 
-},{}],42:[function(_dereq_,module,exports){
+},{}],45:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -5363,7 +5459,7 @@ module.exports = function(el) {
     }
 };
 
-},{}],43:[function(_dereq_,module,exports){
+},{}],46:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -5376,7 +5472,7 @@ module.exports = function(event) {
     event.stopPropagation();
 };
 
-},{}],44:[function(_dereq_,module,exports){
+},{}],47:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -5393,5 +5489,5 @@ module.exports = function(el, className, force) {
     }
 };
 
-},{}]},{},[34])(34)
+},{}]},{},[37])(37)
 });
